@@ -23,7 +23,7 @@ output_file=${script_path}/index.html
 
 cfg_json=$( cat ${script_path}/ips.json )
 ips=$( echo ${cfg_json} | jq -cM ".ips" )
-nmap_ips=$( echo ${cfg_json} | jq -cM ".nmap" )
+nmap_ips=$( echo ${cfg_json} | jq -cM ".nmap" | cut -d\" -f2 )
 ipl=$( echo $ips | jq -cM "length" )
 
 nmap -version 1>&/dev/null
