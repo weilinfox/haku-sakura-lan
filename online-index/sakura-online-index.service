@@ -1,0 +1,12 @@
+[Unit]
+Description=Sakura online index
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=5s
+ExecStart=/srv/sakura/online-index/index-gen.sh
+
+[Install]
+WantedBy=multi-user.target

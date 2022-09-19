@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ##########################################################
 #                 sakura-lan online-index                #
 #                                                        #
@@ -15,15 +15,17 @@
 export LC_ALL=C
 export LANG=C.UTF-8
 
-set +e
+set -e
 
 script_path=$(cd $(dirname $0); pwd)
-cache_file=cache.html
-output_file=index.html
+cache_file=${script_path}/cache.html
+output_file=${script_path}/index.html
 ips=$( cat ${script_path}/ips.json )
 ipl=$( echo $ips | jq -cM "length" )
 
 echo "Scan $ipl IP(s)"
+
+set +e
 
 while true; do
 
