@@ -67,20 +67,19 @@ while true; do
 	if [ $delay -eq 0 ]; then
 		delay=10
 
-		echo "<dd>&nbsp;</dd>" >> ${cache_file}
-		echo "<dt>&nbsp;&nbsp;Proxy nmap scan result</dt>" >> ${cache_file}
-
-		nm=$( nmap -sn -T4 ${nmap_ips} )
-		old_ifs=$IFS
-		IFS=$'\n'
-
-		for m in $nm; do
-			echo "<dd>$m</dd>" >> ${cache_file}
-		done
-
-		IFS=${old_ifs}
+		nmap_res=$( nmap -sn -T4 ${nmap_ips} )
 	fi
 	delay=$( expr $delay - 1 )
+
+	echo "<dd>&nbsp;</dd>" >> ${cache_file}
+	echo "<dt>&nbsp;&nbsp;Proxy nmap scan result</dt>" >> ${cache_file}
+
+	old_ifs=$IFS
+	IFS=$'\n'
+	for m in ${nmap_res}; do
+		echo "<dd>$m</dd>" >> ${cache_file}
+	done
+	IFS=${old_ifs}
 
 	cat ${script_path}/tail.html >> ${cache_file}
 	mv ${cache_file} ${output_file}
@@ -90,7 +89,7 @@ while true; do
 	set -e
 	cfg_json=$( cat ${script_path}/ips.json )
 	ips=$( echo ${cfg_json} | jq -cM ".ips" )
-	nmap_ips=$( echo ${cfg_json} | jq -cM ".nmap" )
+	nmap_ips=$( echo ${cfg_json} | jq -cM ".nmap" | cut -d\" -f2 )
 	ipl=$( echo $ips | jq -cM "length" )
 	set +e
 
