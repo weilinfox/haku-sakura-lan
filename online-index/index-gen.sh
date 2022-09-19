@@ -20,17 +20,25 @@ set -e
 script_path=$(cd $(dirname $0); pwd)
 cache_file=${script_path}/cache.html
 output_file=${script_path}/index.html
-ips=$( cat ${script_path}/ips.json )
+
+cfg_json=$( cat ${script_path}/ips.json )
+ips=$( echo ${cfg_json} | jq -cM ".ips" )
+nmap_ips=$( echo ${cfg_json} | jq -cM ".nmap" )
 ipl=$( echo $ips | jq -cM "length" )
 
+nmap -version 1>&/dev/null
+
 echo "Scan $ipl IP(s)"
+echo "Scan ${nmap_ips}"
 
 set +e
+
+delay=0
 
 while true; do
 
 	cat ${script_path}/head.html > ${cache_file}
-	echo "<dt>&nbsp;&nbsp;IP, ping status and descriptions (F5 to refresh)</dt>" >> ${cache_file}
+	echo "<dt>&nbsp;&nbsp;Ping status, IP and descriptions (F5 to refresh)</dt>" >> ${cache_file}
 
 	pos=0
 	while true; do
@@ -46,21 +54,45 @@ while true; do
 		length=${#p[@]}
 		# echo $lengh
 
-		if [ ${length} -eq 22 ]; then
-			echo "<dd><span class=\"offline\">Offline</span>&emsp;&emsp;&emsp;&emsp;$ip</dd>" >> ${cache_file}
-		elif [ ${length} -eq 27 ]; then
+		if [ "${p[ $(expr ${length} - 1) ]}" == "ms" ]; then
 			line="$( echo ${p[ $(expr ${length} - 2) ]} | cut -d/ -f2 ) ms"
 			echo "<dd><span class=\"online\">$line</span>&emsp;&emsp;&emsp;&emsp;$ip&emsp;&emsp;&emsp;&emsp;$de</dd>" >> ${cache_file}
 		else
-			echo "<dd><span class=\"offline\">Error</span>&emsp;&emsp;&emsp;&emsp;$ip&nbsp;${p[*]}</dd>" >> ${cache_file}
+			echo "<dd><span class=\"offline\">Offline</span>&emsp;&emsp;&emsp;&emsp;$ip</dd>" >> ${cache_file}
 		fi
 		pos=$( expr $pos + 1 )
 	done
+
+	# nmap scan
+	if [ $delay -eq 0 ]; then
+		delay=10
+
+		echo "<dd>&nbsp;</dd>" >> ${cache_file}
+		echo "<dt>&nbsp;&nbsp;Proxy nmap scan result</dt>" >> ${cache_file}
+
+		nm=$( nmap -sn -T4 ${nmap_ips} )
+		old_ifs=$IFS
+		IFS=$'\n'
+
+		for m in $nm; do
+			echo "<dd>$m</dd>" >> ${cache_file}
+		done
+
+		IFS=${old_ifs}
+	fi
+	delay=$( expr $delay - 1 )
 
 	cat ${script_path}/tail.html >> ${cache_file}
 	mv ${cache_file} ${output_file}
 
 	sleep 5m
+
+	set -e
+	cfg_json=$( cat ${script_path}/ips.json )
+	ips=$( echo ${cfg_json} | jq -cM ".ips" )
+	nmap_ips=$( echo ${cfg_json} | jq -cM ".nmap" )
+	ipl=$( echo $ips | jq -cM "length" )
+	set +e
 
 done
 
