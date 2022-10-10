@@ -38,7 +38,7 @@ delay=0
 while true; do
 
 	cat ${script_path}/head.html > ${cache_file}
-	echo "<dt>&nbsp;&nbsp;Ping status, IP and descriptions (F5 to refresh)</dt>" >> ${cache_file}
+	echo "<dt>&nbsp;&nbsp;Ping status, IP and descriptions (starting ping at $(date +"%F %R %Z"))</dt>" >> ${cache_file}
 
 	pos=0
 	while true; do
